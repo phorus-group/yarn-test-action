@@ -1,0 +1,63 @@
+name: Yarn Test Action
+description: An action to test
+
+inputs:
+  command:
+    description: "The yarn command to run"
+    required: false
+    default: test
+  coverage-summary-location:
+    description: "Location of the coverage summary"
+    required: false
+    default: "./test/.coverage/coverage-summary.json"
+outputs:
+  total-lines:
+    description: "Total lines to cover with tests, only set if BUILD_AND_TEST is set to true"
+    value: ${{ steps.build_and_test.outputs.total-lines }}
+  lines-covered:
+    description: "Total lines to covered with tests, only set if BUILD_AND_TEST is set to true"
+    value: ${{ steps.build_and_test.outputs.lines-covered }}
+  coverage-percentage:
+    description: "The coverage percentage, only set if BUILD_AND_TEST is set to true"
+    value: ${{ steps.build_and_test.outputs.coverage-percentage }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'yarn'
+
+    - name: "Run yarn install"
+      run: yarn install --immutable
+
+    - name: "Run tests"
+      id: test
+      run: |
+        rm -rf ${{ inputs.coverage-summary-location }}
+
+        yarn ${{ inputs.command }}
+
+        if [ -f ${{ inputs.coverage-summary-location }} ]; then
+          TOTAL_LINES=$(echo "$(jq '.total | .lines | .total ' $COVERAGE_SUMMARY_LOCATION)")
+          LINES_COVERED=$(echo "$(jq '.total | .lines | .covered ' $COVERAGE_SUMMARY_LOCATION)")
+          COVERAGE_PERCENTAGE=$(echo "$(jq '.total | .lines | .pct | .*100.0 + 0.5|floor/100.0' $COVERAGE_SUMMARY_LOCATION)")
+
+          echo "$LINES_COVERED / $TOTAL_LINES  instructions covered"
+          echo "$COVERAGE_PERCENTAGE % covered"
+
+          echo "total-lines=$TOTAL_LINES" >> "$GITHUB_OUTPUT"
+          echo "lines-covered=$LINES_COVERED" >> "$GITHUB_OUTPUT"
+          echo "coverage-percentage=$COVERAGE_PERCENTAGE" >> "$GITHUB_OUTPUT"
+        else
+          echo -e "\e[33mCoverage summary not found!\e[0m"
+        fi
+      shell: bash
+
+    - name: Report Status Check
+      if: always()
+      uses: phorus-group/workflow-status-check-action@main
+      with:
+        state: ${{ steps.test.outcome }}

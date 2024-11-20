@@ -1,0 +1,14 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "gradle-build-action",
+      "pattern": [
+        {
+          "regexp": "^(ERROR|WARNING|INFO):\\s(.+)$",
+          "severity": 1,
+          "message": 2
+        }
+      ]
+    }
+  ]
+}
