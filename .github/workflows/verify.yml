@@ -28,7 +28,7 @@ jobs:
 
   enforce-all-checks:
     name: Enforce all checks
-    needs: [self_check]
+    # needs: [self_check]
     runs-on: ubuntu-latest
     permissions:
       checks: read
