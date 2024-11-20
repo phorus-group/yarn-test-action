@@ -1,4 +1,4 @@
-name: Verify Bash Action
+name: Verify Action
 
 on:
   pull_request:
