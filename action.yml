@@ -55,9 +55,3 @@ runs:
           echo -e "\e[33mCoverage summary not found!\e[0m"
         fi
       shell: bash
-
-    - name: Report Status Check
-      if: always()
-      uses: phorus-group/workflow-status-check-action@main
-      with:
-        state: ${{ steps.test.outcome }}
