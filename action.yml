@@ -79,7 +79,7 @@ runs:
         fi
     
     - name: "Report test summary"
-      if: ${{ !cancelled() && steps.process-junit-report.outputs.junit-report = 'true' }}
+      if: ${{ !cancelled() && steps.process-junit-report.outputs.junit-report == 'true' }}
       uses: test-summary/action@v2
       with:
         paths: ${{ inputs.junit-report-location }}
