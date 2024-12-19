@@ -13,7 +13,7 @@ inputs:
   junit-report-location:
     description: "Location of the junit.xml report"
     required: false
-    default: "./test/.coverage/junitt.xml"
+    default: "./test/.coverage/junit.xml"
 outputs:
   total-lines:
     description: "Total lines to cover with tests, only set if BUILD_AND_TEST is set to true"
@@ -52,9 +52,9 @@ runs:
       shell: bash
       run: |
         if [ -f ${{ inputs.coverage-summary-location }} ]; then
-          TOTAL_LINES=$(echo "$(jq '.total | .lines | .total ' $COVERAGE_SUMMARY_LOCATION)")
-          LINES_COVERED=$(echo "$(jq '.total | .lines | .covered ' $COVERAGE_SUMMARY_LOCATION)")
-          COVERAGE_PERCENTAGE=$(echo "$(jq '.total | .lines | .pct | .*100.0 + 0.5|floor/100.0' $COVERAGE_SUMMARY_LOCATION)")
+          TOTAL_LINES=$(echo "$(jq '.total | .lines | .total ' ${{ inputs.coverage-summary-location }})")
+          LINES_COVERED=$(echo "$(jq '.total | .lines | .covered ' ${{ inputs.coverage-summary-location }})")
+          COVERAGE_PERCENTAGE=$(echo "$(jq '.total | .lines | .pct | .*100.0 + 0.5|floor/100.0' ${{ inputs.coverage-summary-location }})")
 
           echo "$LINES_COVERED / $TOTAL_LINES  instructions covered"
           echo "$COVERAGE_PERCENTAGE % covered"
@@ -66,8 +66,20 @@ runs:
           echo -e "\e[33mCoverage summary not found!\e[0m"
         fi
 
-    - name: "Report test summary"
+    - name: "Process junit report"
+      id: process-junit-report
       if: ${{ !cancelled() }}
+      shell: bash
+      run: |
+        if [ -f ${{ inputs.junit-report-location }} ]; then
+          echo "junit-report=true" >> "$GITHUB_OUTPUT"
+        else
+          echo -e "\e[33mJunit report not found!\e[0m"
+          echo "junit-report=false" >> "$GITHUB_OUTPUT"
+        fi
+    
+    - name: "Report test summary"
+      if: ${{ !cancelled() && steps.process-junit-report.outputs.junit-report = 'true' }}
       uses: test-summary/action@v2
       with:
         paths: ${{ inputs.junit-report-location }}
