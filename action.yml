@@ -10,16 +10,20 @@ inputs:
     description: "Location of the coverage summary"
     required: false
     default: "./test/.coverage/coverage-summary.json"
+  junit-report-location:
+    description: "Location of the junit.xml report"
+    required: false
+    default: "./test/.coverage/junit.xml"
 outputs:
   total-lines:
     description: "Total lines to cover with tests, only set if BUILD_AND_TEST is set to true"
-    value: ${{ steps.build_and_test.outputs.total-lines }}
+    value: ${{ steps.report-coverage.outputs.total-lines }}
   lines-covered:
     description: "Total lines to covered with tests, only set if BUILD_AND_TEST is set to true"
-    value: ${{ steps.build_and_test.outputs.lines-covered }}
+    value: ${{ steps.report-coverage.outputs.lines-covered }}
   coverage-percentage:
     description: "The coverage percentage, only set if BUILD_AND_TEST is set to true"
-    value: ${{ steps.build_and_test.outputs.coverage-percentage }}
+    value: ${{ steps.report-coverage.outputs.coverage-percentage }}
 
 runs:
   using: composite
@@ -40,8 +44,16 @@ runs:
         rm -rf ${{ inputs.coverage-summary-location }}
 
         yarn ${{ inputs.command }}
+      shell: bash
 
+    - name: "Report coverage"
+      id: report-coverage
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: |
         if [ -f ${{ inputs.coverage-summary-location }} ]; then
+          echo "coverage-enabled=true" >> "$GITHUB_OUTPUT"
+
           TOTAL_LINES=$(echo "$(jq '.total | .lines | .total ' $COVERAGE_SUMMARY_LOCATION)")
           LINES_COVERED=$(echo "$(jq '.total | .lines | .covered ' $COVERAGE_SUMMARY_LOCATION)")
           COVERAGE_PERCENTAGE=$(echo "$(jq '.total | .lines | .pct | .*100.0 + 0.5|floor/100.0' $COVERAGE_SUMMARY_LOCATION)")
@@ -53,6 +65,13 @@ runs:
           echo "lines-covered=$LINES_COVERED" >> "$GITHUB_OUTPUT"
           echo "coverage-percentage=$COVERAGE_PERCENTAGE" >> "$GITHUB_OUTPUT"
         else
+          echo "coverage-enabled=false" >> "$GITHUB_OUTPUT"
+
           echo -e "\e[33mCoverage summary not found!\e[0m"
         fi
-      shell: bash
+
+    - name: "Report test summary"
+      if: ${{ !cancelled() && steps.report-coverage.outputs.coverage-enabled == 'true' }}
+      uses: test-summary/action@v2
+      with:
+        paths: ${{ inputs.junit-report-location }}
