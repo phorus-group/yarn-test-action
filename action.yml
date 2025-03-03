@@ -6,6 +6,10 @@ inputs:
     description: "The yarn command to run"
     required: false
     default: test
+  node-version:
+    description: "The node version to use"
+    required: false
+    default: "22"
   coverage-summary-location:
     description: "Location of the coverage summary"
     required: false
@@ -31,7 +35,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version:  ${{ inputs.node-version }}
         cache: 'yarn'
 
     - name: "Run yarn install"
