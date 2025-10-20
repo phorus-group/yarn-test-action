@@ -42,6 +42,11 @@ runs:
       shell: bash
       run: yarn install --immutable
 
+    - name: "Install Playwright browsers"
+      if: ${{ contains(inputs.command, 'integration') || contains(inputs.command, 'e2e') }}
+      shell: bash
+      run: npx playwright install --with-deps
+
     - name: "Run tests"
       id: test
       run: |
