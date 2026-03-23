@@ -26,10 +26,6 @@ inputs:
     description: "Label for the coverage summary, such as Unit or Integration"
     required: false
     default: ""
-  enable-codecov:
-    description: "Set to true to upload coverage to Codecov"
-    required: false
-    default: "false"
   codecov-token:
     description: "Codecov token for private repos. Public repos can leave this empty."
     required: false
@@ -123,7 +119,7 @@ runs:
         paths: ${{ inputs.junit-report-location }}
 
     - name: "Upload coverage to Codecov"
-      if: ${{ !cancelled() && inputs.enable-codecov == 'true' }}
+      if: ${{ !cancelled() && inputs.codecov-token != '' }}
       uses: codecov/codecov-action@v5
       with:
         files: ${{ inputs.coverage-report-location }}
