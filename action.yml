@@ -26,6 +26,14 @@ inputs:
     description: "Label for the coverage summary, such as Unit or Integration"
     required: false
     default: ""
+  coverage-json-location:
+    description: "Location of the full istanbul coverage-final.json, used for merging across test runs"
+    required: false
+    default: "./test/.coverage/coverage-final.json"
+  artifact-suffix:
+    description: "Artifact suffix for uploading coverage data, such as unit or integration"
+    required: false
+    default: ""
   codecov-token:
     description: "Codecov token for private repos. Public repos can leave this empty."
     required: false
@@ -125,3 +133,11 @@ runs:
         files: ${{ inputs.coverage-report-location }}
         token: ${{ inputs.codecov-token }}
         fail_ci_if_error: false
+
+    - name: "Upload coverage artifact for merging"
+      if: ${{ !cancelled() && inputs.artifact-suffix != '' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ inputs.artifact-suffix }}
+        retention-days: 2
+        path: ${{ inputs.coverage-json-location }}
