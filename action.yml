@@ -83,9 +83,9 @@ runs:
         fi
 
         if [ -f ${{ inputs.coverage-summary-location }} ]; then
-          TOTAL_LINES=$(jq '.total.lines.total' ${{ inputs.coverage-summary-location }})
-          LINES_COVERED=$(jq '.total.lines.covered' ${{ inputs.coverage-summary-location }})
-          COVERAGE_PERCENTAGE=$(jq '.total.lines.pct | .*100.0 + 0.5|floor/100.0' ${{ inputs.coverage-summary-location }})
+          TOTAL_LINES=$(jq '.total.lines.total // 0' ${{ inputs.coverage-summary-location }})
+          LINES_COVERED=$(jq '.total.lines.covered // 0' ${{ inputs.coverage-summary-location }})
+          COVERAGE_PERCENTAGE=$(jq '(.total.lines.pct // 0) | if type == "number" then .*100.0 + 0.5|floor/100.0 else 0 end' ${{ inputs.coverage-summary-location }})
 
           echo "$LINES_COVERED / $TOTAL_LINES lines covered"
           echo "$COVERAGE_PERCENTAGE% covered"
