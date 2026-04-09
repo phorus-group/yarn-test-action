@@ -132,6 +132,7 @@ runs:
       with:
         files: ${{ inputs.coverage-report-location }}
         token: ${{ inputs.codecov-token }}
+        disable_search: true
         fail_ci_if_error: false
 
     - name: "Upload coverage artifact for merging"
